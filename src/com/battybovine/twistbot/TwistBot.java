@@ -1,6 +1,7 @@
 package com.battybovine.twistbot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -20,11 +21,10 @@ public class TwistBot extends PircBot {
 	
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
-		Pattern p = Pattern.compile("^!(.*)");
+		Pattern p = Pattern.compile("^!(.*)$");
 		Matcher m = p.matcher(message);
-		if(m.matches()) {
-			this.handleClientCommand(channel, sender, m.group(1).trim());
-		}
+		if(m.matches())
+			this.handleClientCommand(channel, sender, login, hostname, m.group(1).trim());
 	}
 	
 	public void onPrivateMessage(String sender,
@@ -55,6 +55,7 @@ public class TwistBot extends PircBot {
 	public void onJoin(String channel, String sender, String login, String hostname) {
 		if(sender.equals(this.getNick())) {
 			channels.add(channel);
+			this.sendRawLine("WHO "+channel);
 		}
 	}
 	
@@ -69,18 +70,24 @@ public class TwistBot extends PircBot {
 		if(recipient==this.getNick())	this.joinChannel(channel);
 	}
 	
+	public void onSetModerated(String channel, String sourcenick,
+			String sourcelogin, String sourcehostname) {
+		this.setMode(channel, "+N");
+	}
+	
+	public void onRemoveModerated(String channel, String sourcenick,
+			String sourcelogin, String sourcehostname) {
+		this.setMode(channel, "-N");
+	}
+	
 	
 	
 	private String getStatus(String channel, String nick) {
-		String status = "";
-		User users[] = getUsers(channel);
-		for(User user : users) {
-			if(nick.equals(user.getNick())) {
-				status = user.getPrefix();
-				break;
-			}
-		}
-		return status;
+		List<User> users = new ArrayList<User>(Arrays.asList(getUsers(channel)));
+		User cmp = new User("", nick, "", "");
+		if(users.contains(cmp))
+			return users.get(users.indexOf(cmp)).getPrefix();
+		return "";
 	}
 	
 	
@@ -89,7 +96,8 @@ public class TwistBot extends PircBot {
 		System.out.println(message);
 	}
 	
-	public void handleClientCommand(String channel, String sender, String cmdin) {
+	public void handleClientCommand(String channel, String sender,
+			String login, String hostname, String cmdin) {
 		String[] cmdsplit = cmdin.split("\\s+", 2);
 		String cmd = cmdsplit[0].toLowerCase();
 		String[] args = null;
@@ -129,6 +137,30 @@ public class TwistBot extends PircBot {
 			return;
 		}
 		
+		// !mute : Only OPs and above should be able to do this
+		if(cmd.matches("mute")) {
+			if(senderstatus.matches("[&@~]")) {
+				if(args!=null && args.length>=1) {
+					this.setMode(channel, "+b ~q*"+args[0]+"*!*@*");
+				}
+			} else {
+				this.kickNoOps(channel, sender);
+			}
+			return;
+		}
+		
+		// !unmute : Only OPs and above should be able to do this
+		if(cmd.matches("unmute")) {
+			if(senderstatus.matches("[&@~]")) {
+				if(args!=null && args.length>=1) {
+					this.setMode(channel, "-b ~q*"+args[0]+"*!*@*");
+				}
+			} else {
+				this.kickNoOps(channel, sender);
+			}
+			return;
+		}
+		
 		// !kick : Only OPs and above should be able to do this
 		if(cmd.matches("kick")) {
 			if(senderstatus.matches("[&@~]")) {
@@ -150,6 +182,16 @@ public class TwistBot extends PircBot {
 		if(cmd.matches("ban")) {
 			if(senderstatus.matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
+//					String[] hostsplit = hostname.split("\\.");
+//					if(hostsplit.length>=2) {
+//						String hostban = "";
+//						for(int i=1; i<hostsplit.length; i++)
+//							hostban += "."+hostsplit[i];
+//						hostban = "*"+hostban;
+//						this.ban(channel, "*!*@"+hostban);
+//					} else {
+//						this.ban(channel, "*!*@"+hostname);
+//					}
 					this.ban(channel, "*"+args[0]+"*!*@*");
 					String reason = "";
 					for(int i=1; i<args.length; i++) reason += args[i] + " ";
@@ -157,6 +199,18 @@ public class TwistBot extends PircBot {
 						this.kick(channel, args[0]);
 					else
 						this.kick(channel, args[0], this.twistify(reason.trim()));
+				}
+			} else {
+				this.kickNoOps(channel, sender);
+			}
+			return;
+		}
+		
+		// !unban : Only OPs and above should be able to do this
+		if(cmd.matches("unban")) {
+			if(senderstatus.matches("[&@~]")) {
+				if(args!=null && args.length>=1) {
+					this.unBan(channel, "*"+args[0]+"*!*@*");
 				}
 			} else {
 				this.kickNoOps(channel, sender);
@@ -336,38 +390,38 @@ public class TwistBot extends PircBot {
 		else		num = NUM_PONI_SHOWS;
 		
 		switch(num) {
-		case 1:		poniname = "Friendship Is Magic - Part 1";		ponicode = "q6sUJR1GiGI"; break;
-		case 2:		poniname = "Friendship Is Magic - Part 2";		ponicode = "SYVA0h5gfV8"; break;
-		case 3:		poniname = "The Ticket Master";					ponicode = "TDhJdGwPPx0"; break;
-		case 4:		poniname = "Applebuck Season";					ponicode = "BEi_BjDN1Nk"; break;
-		case 5:		poniname = "Griffon The Brush-Off";				ponicode = "grq_IW1pdg8"; break;
-		case 6:		poniname = "Boast Busters";						ponicode = "JSvjBcDbFHA"; break;
-		case 7:		poniname = "Dragonshy";							ponicode = "Qr879wBybpw"; break;
-		case 8:		poniname = "Look Before You Sleep";				ponicode = "zyrNM2_ncZg"; break;
-		case 9:		poniname = "Bridle Gossip";						ponicode = "kslLINriezQ"; break;
-		case 10:	poniname = "Swarm Of The Century";				ponicode = "k0iMgyP1Qhc"; break;
-		case 11:	poniname = "Winter Wrap Up";					ponicode = "gwybXq7pdbA"; break;
-		case 12:	poniname = "Call Of The Cutie";					ponicode = "W7grh5exALQ"; break;
-		case 13:	poniname = "Fall Weather Friends";				ponicode = "xouOH84DM6I"; break;
-		case 14:	poniname = "Suited For Success";				ponicode = "X6A5njFwJTI"; break;
-		case 15:	poniname = "Feeling Pinkie Keen";				ponicode = "C7wqjGZzoss"; break;
-		case 16:	poniname = "Sonic Rainboom";					ponicode = "20qW-w1fJFw"; break;
-		case 17:	poniname = "Stare Master";						ponicode = "eqt-M_bmN-8"; break;
-		case 18:	poniname = "The Show Stoppers";					ponicode = "1T0TeTCCnzs"; break;
-		case 19:	poniname = "A Dog And Pony Show";				ponicode = "UdzMhcT_VeM"; break;
-		case 20:	poniname = "Green Isn't Your Color";			ponicode = "A9FJJjd1YF0"; break;
-		case 21:	poniname = "Over A Barrel";						ponicode = "Zou9iRGA9iI"; break;
-		case 22:	poniname = "A Bird In The Hoof";				ponicode = "NpzYBlt-xOY"; break;
-		case 23:	poniname = "The Cutie Mark Chronicles";			ponicode = "0FgL5W9b_Lk"; break;
-		case 24:	poniname = "Owl's Well That Ends Well";			ponicode = "L0pYwG_QF1c"; break;
-		case 25:	poniname = "Party Of One";						ponicode = "_qDahzMNTJw"; break;
-		case 26:	poniname = "The Best Night Ever";				ponicode = "oXJvULB7hKA"; break;
-		case 27:	poniname = "The Return of Harmony - Part 1";	ponicode = "RQqvIYyybl8"; break;
-		case 28:	poniname = "The Return of Harmony - Part 2";	ponicode = "UxkknJTKue4"; break;
-		case 29:	poniname = "Lesson Zero";						ponicode = "Q2SX0BwlETI"; break;
-		case 30:	poniname = "Luna Eclipsed";						ponicode = "Pfhd82PFJi8"; break;
-		case 31:	poniname = "Sisterhooves Social";				ponicode = "9cDyMjm7uP4"; break;
-		case 32:	poniname = "The Cutie Pox";						ponicode = "ijPtYR0IxYY"; break;
+		case 1:		poniname = "Friendship Is Magic - Part 1";		ponicode = "q6sUJR1GiGI";	break;
+		case 2:		poniname = "Friendship Is Magic - Part 2";		ponicode = "SYVA0h5gfV8";	break;
+		case 3:		poniname = "The Ticket Master";					ponicode = "TDhJdGwPPx0";	break;
+		case 4:		poniname = "Applebuck Season";					ponicode = "BEi_BjDN1Nk";	break;
+		case 5:		poniname = "Griffon The Brush-Off";				ponicode = "grq_IW1pdg8";	break;
+		case 6:		poniname = "Boast Busters";						ponicode = "JSvjBcDbFHA";	break;
+		case 7:		poniname = "Dragonshy";							ponicode = "Qr879wBybpw";	break;
+		case 8:		poniname = "Look Before You Sleep";				ponicode = "zyrNM2_ncZg";	break;
+		case 9:		poniname = "Bridle Gossip";						ponicode = "kslLINriezQ";	break;
+		case 10:	poniname = "Swarm Of The Century";				ponicode = "k0iMgyP1Qhc";	break;
+		case 11:	poniname = "Winter Wrap Up";					ponicode = "gwybXq7pdbA";	break;
+		case 12:	poniname = "Call Of The Cutie";					ponicode = "W7grh5exALQ";	break;
+		case 13:	poniname = "Fall Weather Friends";				ponicode = "xouOH84DM6I";	break;
+		case 14:	poniname = "Suited For Success";				ponicode = "X6A5njFwJTI";	break;
+		case 15:	poniname = "Feeling Pinkie Keen";				ponicode = "C7wqjGZzoss";	break;
+		case 16:	poniname = "Sonic Rainboom";					ponicode = "20qW-w1fJFw";	break;
+		case 17:	poniname = "Stare Master";						ponicode = "eqt-M_bmN-8";	break;
+		case 18:	poniname = "The Show Stoppers";					ponicode = "1T0TeTCCnzs";	break;
+		case 19:	poniname = "A Dog And Pony Show";				ponicode = "UdzMhcT_VeM";	break;
+		case 20:	poniname = "Green Isn't Your Color";			ponicode = "A9FJJjd1YF0";	break;
+		case 21:	poniname = "Over A Barrel";						ponicode = "Zou9iRGA9iI";	break;
+		case 22:	poniname = "A Bird In The Hoof";				ponicode = "NpzYBlt-xOY";	break;
+		case 23:	poniname = "The Cutie Mark Chronicles";			ponicode = "0FgL5W9b_Lk";	break;
+		case 24:	poniname = "Owl's Well That Ends Well";			ponicode = "L0pYwG_QF1c";	break;
+		case 25:	poniname = "Party Of One";						ponicode = "_qDahzMNTJw";	break;
+		case 26:	poniname = "The Best Night Ever";				ponicode = "oXJvULB7hKA";	break;
+		case 27:	poniname = "The Return of Harmony - Part 1";	ponicode = "RQqvIYyybl8";	break;
+		case 28:	poniname = "The Return of Harmony - Part 2";	ponicode = "UxkknJTKue4";	break;
+		case 29:	poniname = "Lesson Zero";						ponicode = "Q2SX0BwlETI";	break;
+		case 30:	poniname = "Luna Eclipsed";						ponicode = "Pfhd82PFJi8";	break;
+		case 31:	poniname = "Sisterhooves Social";				ponicode = "9cDyMjm7uP4";	break;
+		case 32:	poniname = "The Cutie Pox";						ponicode = "ijPtYR0IxYY";	break;
 		}
 		return (poniname.isEmpty() || ponicode.isEmpty())
 				? Colors.RED+"UNDEFINED" : (poniname+": " + "http://youtu.be/"+ponicode);
