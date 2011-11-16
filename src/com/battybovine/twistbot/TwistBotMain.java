@@ -79,8 +79,7 @@ public class TwistBotMain {
 				bot.printMessage("Cannot capture input: " + e.getLocalizedMessage());
 			}
 			if(in.isEmpty()) continue;
-			Pattern p = Pattern.compile("^[/!](.*)");
-			Matcher m = p.matcher(in);
+			Matcher m = Pattern.compile("^[/!](.*)").matcher(in);
 			if(m.matches()) {
 				if(in.startsWith("/"))
 					loop = bot.handleServerCommand(m.group(1).trim());

@@ -1183,6 +1183,9 @@ public abstract class PircBot implements ReplyConstants {
                 // Stick with the value of zero.
             }
             String topic = response.substring(colon + 1);
+            // Now that we can guarantee we're in a channel, get
+            // the user list for this channel using the WHO command
+			this.sendRawLine("WHO " + channel);
             this.onChannelInfo(channel, userCount, topic);
         }
         else if (code == RPL_TOPIC) {
@@ -1216,43 +1219,15 @@ public abstract class PircBot implements ReplyConstants {
             
             this.onTopic(channel, topic, setBy, date, false);
         }
-//        else if (code == RPL_NAMREPLY) {
-//            // This is a list of nicks in a channel that we've just joined.
-//            int channelEndIndex = response.indexOf(" :");
-//            String channel = response.substring(response.lastIndexOf(' ', channelEndIndex - 1) + 1, channelEndIndex);
-//            
-//            StringTokenizer tokenizer = new StringTokenizer(response.substring(response.indexOf(" :") + 2));
-//            while (tokenizer.hasMoreTokens()) {
-//                String nick = tokenizer.nextToken();
-//                String prefix = "";
-//                if (nick.startsWith("~")) {
-//                    // User is a channel owner.
-//                    prefix = "~";
-//                }
-//                else if (nick.startsWith("&")) {
-//                    // User is a super-operator in this channel.
-//                    prefix = "&";
-//                }
-//                else if (nick.startsWith("@")) {
-//                    // User is an operator in this channel.
-//                    prefix = "@";
-//                }
-//                else if (nick.startsWith("%")) {
-//                    // User is a half-operator in this channel.
-//                    prefix = "%";
-//                }
-//                else if (nick.startsWith("+")) {
-//                    // User is voiced in this channel.
-//                    prefix = "+";
-//                }
-//                else if (nick.startsWith(".")) {
-//                    // Some wibbly status I've never seen before...
-//                    prefix = ".";
-//                }
-//                nick = nick.substring(prefix.length());
-//                this.addUser(channel, new User(prefix, nick));
-//            }
-//        }
+        else if (code == RPL_NAMREPLY) {
+            // This is a list of nicks in a channel that we've just joined.
+        	// However, we're skipping it in favour of getting the user list
+        	// from the WHO command, which provides more details about each
+        	// user in the channel.
+            int channelEndIndex = response.indexOf(" :");
+            String channel = response.substring(response.lastIndexOf(' ', channelEndIndex - 1) + 1, channelEndIndex);
+			this.sendRawLine("WHO " + channel);
+        }
 //        else if (code == RPL_ENDOFNAMES) {
 //            // This is the end of a NAMES list, so we know that we've got
 //            // the full list of users in the channel that we just joined.

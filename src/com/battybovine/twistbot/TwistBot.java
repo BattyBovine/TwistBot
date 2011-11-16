@@ -22,8 +22,7 @@ public class TwistBot extends PircBot {
 	@Override
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
-		Pattern p = Pattern.compile("^!(.*)$");
-		Matcher m = p.matcher(message);
+		Matcher m = Pattern.compile("^!(.*)$").matcher(message);
 		if(m.matches())
 			this.handleClientCommand(channel, sender, login, hostname, m.group(1).trim());
 	}
@@ -31,8 +30,7 @@ public class TwistBot extends PircBot {
 	@Override
 	public void onPrivateMessage(String sender,
 			String login, String hostname, String message) {
-		Pattern p = Pattern.compile("^!(.*)");
-		Matcher m = p.matcher(message);
+		Matcher m = Pattern.compile("^!(.*)").matcher(message);
 		if(m.matches()) {
 			String[] cmdargs = m.group(1).split("\\s+");
 			for(String cmdarg : cmdargs) {
@@ -59,7 +57,6 @@ public class TwistBot extends PircBot {
 	public void onJoin(String channel, String sender, String login, String hostname) {
 		if(sender.equals(this.getNick())) {
 			channels.add(channel);
-			this.sendRawLine("WHO "+channel);
 		}
 	}
 	
