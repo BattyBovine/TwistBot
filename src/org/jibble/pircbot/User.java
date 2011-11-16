@@ -34,22 +34,6 @@ public class User {
      *
      * @param prefix The status of the user, for example, "@".
      * @param nick The nick of the user.
-     */
-//    User(String prefix, String nick) {
-//        _prefix = prefix;
-//        _nick = nick;
-//        _lowerNick = nick.toLowerCase();
-//        _login = "";
-//        _hostname = "";
-//        _modes = "";
-//    }
-    
-    
-    /**
-     * Constructs a User object with a known prefix and nick.
-     *
-     * @param prefix The status of the user, for example, "@".
-     * @param nick The nick of the user.
      * @param login The login name of the user.
      * @param hostname The hostname of the user.
      */
@@ -148,7 +132,8 @@ public class User {
      * 
      * @return The user's prefix and nick.
      */
-    public String toString() {
+    @Override
+	public String toString() {
         return this.getPrefix() + this.getNick();
     }
     
@@ -171,7 +156,8 @@ public class User {
      * 
      * @return true if o is a User object with a matching lowercase nick.
      */
-    public boolean equals(Object o) {
+    @Override
+	public boolean equals(Object o) {
         if (o instanceof User) {
             User other = (User) o;
             return other._lowerNick.equals(_lowerNick);
@@ -185,7 +171,8 @@ public class User {
      * 
      * @return the hash code of the User object.
      */
-    public int hashCode() {
+    @Override
+	public int hashCode() {
         return _lowerNick.hashCode();
     }
     

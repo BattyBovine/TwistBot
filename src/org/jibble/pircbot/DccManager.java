@@ -70,7 +70,7 @@ public class DccManager {
             DccFileTransfer transfer = null;
             synchronized (_awaitingResume) {
                 for (int i = 0; i < _awaitingResume.size(); i++) {
-                    transfer = (DccFileTransfer) _awaitingResume.elementAt(i);
+                    transfer = _awaitingResume.elementAt(i);
                     if (transfer.getNick().equals(nick) && transfer.getPort() == port) {
                         _awaitingResume.removeElementAt(i);
                         break;
@@ -91,7 +91,7 @@ public class DccManager {
             DccFileTransfer transfer = null;
             synchronized (_awaitingResume) {
                 for (int i = 0; i < _awaitingResume.size(); i++) {
-                    transfer = (DccFileTransfer) _awaitingResume.elementAt(i);
+                    transfer = _awaitingResume.elementAt(i);
                     if (transfer.getNick().equals(nick) && transfer.getPort() == port) {
                         _awaitingResume.removeElementAt(i);
                         break;
@@ -111,7 +111,8 @@ public class DccManager {
             final DccChat chat = new DccChat(_bot, nick, login, hostname, address, port);
             
             new Thread() {
-                public void run() {
+                @Override
+				public void run() {
                     _bot.onIncomingChatRequest(chat);
                 }
             }.start();

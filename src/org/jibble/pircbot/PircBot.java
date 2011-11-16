@@ -798,7 +798,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @deprecated As of PircBot 1.2.0, use {@link #onIncomingFileTransfer(DccFileTransfer)}
      */
-    protected final void dccReceiveFile(File file, long address, int port, int size) {
+    @Deprecated
+	protected final void dccReceiveFile(File file, long address, int port, int size) {
         throw new RuntimeException("dccReceiveFile is deprecated, please use sendFile");
     }
     
@@ -887,7 +888,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @deprecated As of PircBot 1.2.0, use {@link #onIncomingChatRequest(DccChat)}
      */
-    protected final DccChat dccAcceptChatRequest(String sourceNick, long address, int port) {
+    @Deprecated
+	protected final DccChat dccAcceptChatRequest(String sourceNick, long address, int port) {
         throw new RuntimeException("dccAcceptChatRequest is deprecated, please use onIncomingChatRequest");
     }
 
@@ -1209,7 +1211,7 @@ public abstract class PircBot implements ReplyConstants {
                 // Stick with the default value of zero.
             }
             
-            String topic = (String) _topics.get(channel);
+            String topic = _topics.get(channel);
             _topics.remove(channel);
             
             this.onTopic(channel, topic, setBy, date, false);
@@ -1494,7 +1496,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @deprecated As of 1.2.0, replaced by {@link #onTopic(String,String,String,long,boolean)}
      */
-    protected void onTopic(String channel, String topic) {}
+    @Deprecated
+	protected void onTopic(String channel, String topic) {}
     
 
     /**
@@ -2189,7 +2192,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @deprecated As of PircBot 1.2.0, use {@link #onIncomingFileTransfer(DccFileTransfer)}
      */
-    protected void onDccSendRequest(String sourceNick, String sourceLogin, String sourceHostname, String filename, long address, int port, int size) {}
+    @Deprecated
+	protected void onDccSendRequest(String sourceNick, String sourceLogin, String sourceHostname, String filename, long address, int port, int size) {}
     
     
     /**
@@ -2199,7 +2203,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @deprecated As of PircBot 1.2.0, use {@link #onIncomingChatRequest(DccChat)}
      */
-    protected void onDccChatRequest(String sourceNick, String sourceLogin, String sourceHostname, long address, int port) {}
+    @Deprecated
+	protected void onDccChatRequest(String sourceNick, String sourceLogin, String sourceHostname, long address, int port) {}
     
     
     /**
@@ -2809,7 +2814,7 @@ public abstract class PircBot implements ReplyConstants {
             return null;
         }
         // Clone the array to prevent external modification.
-        return (int[]) _dccPorts.clone();
+        return _dccPorts.clone();
     }
     
     
@@ -2833,7 +2838,7 @@ public abstract class PircBot implements ReplyConstants {
         }
         else {
             // Clone the array to prevent external modification.
-            _dccPorts = (int[]) ports.clone();
+            _dccPorts = ports.clone();
         }
     }    
     
@@ -2847,7 +2852,8 @@ public abstract class PircBot implements ReplyConstants {
      *
      * @return true if and only if Object o is a PircBot and equal to this.
      */
-    public boolean equals(Object o) {
+    @Override
+	public boolean equals(Object o) {
         // This probably has the same effect as Object.equals, but that may change...
         if (o instanceof PircBot) {
             PircBot other = (PircBot) o;
@@ -2866,7 +2872,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @return the hash code for this instance of PircBot.
      */
-    public int hashCode() {
+    @Override
+	public int hashCode() {
         return super.hashCode();
     }
     
@@ -2890,7 +2897,8 @@ public abstract class PircBot implements ReplyConstants {
      * 
      * @return a String representation of this object.
      */
-    public String toString() {
+    @Override
+	public String toString() {
         return "Version{" + _version + "}" +
                 " Connected{" + isConnected() + "}" +
                 " Server{" + _server + "}" +
@@ -2933,7 +2941,7 @@ public abstract class PircBot implements ReplyConstants {
         channel = channel.toLowerCase();
         User[] userArray = new User[0];
         synchronized (_channels) {
-            Hashtable<?, ?> users = (Hashtable<?, ?>) _channels.get(channel);
+            Hashtable<?, ?> users = _channels.get(channel);
             if (users != null) {
                 userArray = new User[users.size()];
                 Enumeration<?> enumeration = users.elements();
@@ -2965,7 +2973,7 @@ public abstract class PircBot implements ReplyConstants {
             channels = new String[_channels.size()];
             Enumeration<String> enumeration = _channels.keys();
             for (int i = 0; i < channels.length; i++) {
-                channels[i] = (String) enumeration.nextElement();
+                channels[i] = enumeration.nextElement();
             }
         }
         return channels;
@@ -3005,7 +3013,7 @@ public abstract class PircBot implements ReplyConstants {
     private final void addUser(String channel, User user) {
         channel = channel.toLowerCase();
         synchronized (_channels) {
-            Hashtable<User, User> users = (Hashtable<User, User>) _channels.get(channel);
+            Hashtable<User, User> users = _channels.get(channel);
             if (users == null) {
                 users = new Hashtable<User, User>();
                 _channels.put(channel, users);
@@ -3022,7 +3030,7 @@ public abstract class PircBot implements ReplyConstants {
         channel = channel.toLowerCase();
         User user = new User("", nick, "", "");
         synchronized (_channels) {
-            Hashtable<?, ?> users = (Hashtable<?, ?>) _channels.get(channel);
+            Hashtable<?, ?> users = _channels.get(channel);
             if (users != null) {
                 return (User) users.remove(user);
             }
@@ -3038,7 +3046,7 @@ public abstract class PircBot implements ReplyConstants {
         synchronized (_channels) {
             Enumeration<String> enumeration = _channels.keys();
             while (enumeration.hasMoreElements()) {
-                String channel = (String) enumeration.nextElement();
+                String channel = enumeration.nextElement();
                 this.removeUser(channel, nick);
             }
         }
@@ -3052,7 +3060,7 @@ public abstract class PircBot implements ReplyConstants {
         synchronized (_channels) {
             Enumeration<String> enumeration = _channels.keys();
             while (enumeration.hasMoreElements()) {
-                String channel = (String) enumeration.nextElement();
+                String channel = enumeration.nextElement();
                 User user = this.removeUser(channel, oldNick);
                 if (user != null) {
                     user = new User(user.getPrefix(), newNick, user.getLogin(), user.getHostname());
@@ -3087,13 +3095,13 @@ public abstract class PircBot implements ReplyConstants {
     private final void updateUser(String channel, int userMode, String nick) {
         channel = channel.toLowerCase();
         synchronized (_channels) {
-            Hashtable<User, User> users = (Hashtable<User, User>) _channels.get(channel);
+            Hashtable<User, User> users = _channels.get(channel);
             User newUser = null;
             User userObj = null;
             if (users != null) {
                 Enumeration<User> enumeration = users.elements();
                 while(enumeration.hasMoreElements()) {
-                    userObj = (User) enumeration.nextElement();
+                    userObj = enumeration.nextElement();
                     if (userObj.getNick().equalsIgnoreCase(nick)) {
                         if (userMode == OP_ADD) {
                             if (userObj.hasVoice()) {

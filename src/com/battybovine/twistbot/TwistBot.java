@@ -19,6 +19,7 @@ public class TwistBot extends PircBot {
 		this.setFloodDelay(5);
 	}
 	
+	@Override
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
 		Pattern p = Pattern.compile("^!(.*)$");
@@ -27,6 +28,7 @@ public class TwistBot extends PircBot {
 			this.handleClientCommand(channel, sender, login, hostname, m.group(1).trim());
 	}
 	
+	@Override
 	public void onPrivateMessage(String sender,
 			String login, String hostname, String message) {
 		Pattern p = Pattern.compile("^!(.*)");
@@ -47,11 +49,13 @@ public class TwistBot extends PircBot {
 		}
 	}
 	
+	@Override
 	public void onInvite(String targetnick, String sourcenick, String login,
 			String hostname, String channel) {
 		this.joinChannel(channel);
 	}
 	
+	@Override
 	public void onJoin(String channel, String sender, String login, String hostname) {
 		if(sender.equals(this.getNick())) {
 			channels.add(channel);
@@ -59,22 +63,26 @@ public class TwistBot extends PircBot {
 		}
 	}
 	
+	@Override
 	public void onPart(String channel, String sender, String login, String hostname) {
 		if(sender.equals(this.getNick())) {
 			channels.remove(channel);
 		}
 	}
 	
+	@Override
 	public void onKick(String channel, String kickernick, String kickerlogin,
 			String kickerHostname, String recipient, String reason) {
 		if(recipient==this.getNick())	this.joinChannel(channel);
 	}
 	
+	@Override
 	public void onSetModerated(String channel, String sourcenick,
 			String sourcelogin, String sourcehostname) {
 		this.setMode(channel, "+N");
 	}
 	
+	@Override
 	public void onRemoveModerated(String channel, String sourcenick,
 			String sourcelogin, String sourcehostname) {
 		this.setMode(channel, "-N");

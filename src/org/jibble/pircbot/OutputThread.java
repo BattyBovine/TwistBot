@@ -77,7 +77,8 @@ public class OutputThread extends Thread {
      * This method starts the Thread consuming from the outgoing message
      * Queue and sending lines to the server.
      */
-    public void run() {
+    @Override
+	public void run() {
         try {
             boolean running = true;
             while (running) {
