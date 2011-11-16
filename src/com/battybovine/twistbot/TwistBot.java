@@ -81,13 +81,16 @@ public class TwistBot extends PircBot {
 	}
 	
 	
-	
-	private String getStatus(String channel, String nick) {
-		List<User> users = new ArrayList<User>(Arrays.asList(getUsers(channel)));
-		User cmp = new User("", nick, "", "");
-		if(users.contains(cmp))
-			return users.get(users.indexOf(cmp)).getPrefix();
-		return "";
+
+	private User getUserFromNick(String channel, String nick) {
+		if((channel!=null && nick!=null) &&
+				(!channel.isEmpty() && !nick.isEmpty()) ) {
+			List<User> users = new ArrayList<User>(Arrays.asList(getUsers(channel)));
+			User cmp = new User("", nick, "", "");
+			if(users.contains(cmp))
+				return users.get(users.indexOf(cmp));
+		}
+		return null;
 	}
 	
 	
@@ -101,12 +104,13 @@ public class TwistBot extends PircBot {
 		String[] cmdsplit = cmdin.split("\\s+", 2);
 		String cmd = cmdsplit[0].toLowerCase();
 		String[] args = null;
-		String senderstatus = this.getStatus(channel, sender);
 		if(cmdsplit.length>1) { args = cmdsplit[1].split("\\s+"); };
+		User sourceuser = this.getUserFromNick(channel, sender);
+		if(sourceuser == null)	return;
 		
 		// !flood : Only OPs and above should be able to do this
 		if(cmd.matches("flood")) {
-			if(senderstatus.matches("[&@~]")) {
+			if(sourceuser.getPrefix().matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
 					int d = Integer.parseInt(args[0]);
 					if(d<=0) {
@@ -117,14 +121,14 @@ public class TwistBot extends PircBot {
 					this.sendMessage(channel, this.twistify("Flood delay set to "+d+" seconds."));
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !mod : Only AOPs and above should be able to do this
 		if(cmd.matches("mod")) {
-			if(senderstatus.matches("[@~]")) {
+			if(sourceuser.getPrefix().matches("[@~]")) {
 				if(args!=null && args.length>=1) {
 					if(args[0].trim().toLowerCase().equals("on"))
 						this.setMode(channel, "+mN");
@@ -132,88 +136,93 @@ public class TwistBot extends PircBot {
 						this.setMode(channel, "-mN");
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !mute : Only OPs and above should be able to do this
 		if(cmd.matches("mute")) {
-			if(senderstatus.matches("[&@~]")) {
+			if(sourceuser.getPrefix().matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
-					this.setMode(channel, "+b ~q*"+args[0]+"*!*@*");
+					User destuser = this.getUserFromNick(channel, args[0]);
+					if(destuser!=null) {
+						this.setMode(channel, "+b ~q:*!*@"+destuser.getHostname());
+					}
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !unmute : Only OPs and above should be able to do this
 		if(cmd.matches("unmute")) {
-			if(senderstatus.matches("[&@~]")) {
+			if(sourceuser.getPrefix().matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
-					this.setMode(channel, "-b ~q*"+args[0]+"*!*@*");
+					User destuser = this.getUserFromNick(channel, args[0]);
+					if(destuser!=null) {
+						this.setMode(channel, "-b ~q:*!*@"+destuser.getHostname());
+					}
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !kick : Only OPs and above should be able to do this
 		if(cmd.matches("kick")) {
-			if(senderstatus.matches("[&@~]")) {
+			if(sourceuser.getPrefix().matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
-					String reason = "";
-					for(int i=1; i<args.length; i++) reason += args[i] + " ";
-					if(reason.isEmpty())
-						this.kick(channel, args[0]);
-					else
-						this.kick(channel, args[0], this.twistify(reason.trim()));
+					User destuser = this.getUserFromNick(channel, args[0]);
+					if(destuser!=null) {
+						String reason = "";
+						for(int i=1; i<args.length; i++) reason += args[i] + " ";
+						if(reason.isEmpty())
+							this.kick(channel, destuser.getNick());
+						else
+							this.kick(channel, destuser.getNick(), this.twistify(reason.trim()));
+					}
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !ban : Only OPs and above should be able to do this
 		if(cmd.matches("ban")) {
-			if(senderstatus.matches("[&@~]")) {
+			if(sourceuser.getPrefix().matches("[&@~]")) {
 				if(args!=null && args.length>=1) {
-//					String[] hostsplit = hostname.split("\\.");
-//					if(hostsplit.length>=2) {
-//						String hostban = "";
-//						for(int i=1; i<hostsplit.length; i++)
-//							hostban += "."+hostsplit[i];
-//						hostban = "*"+hostban;
-//						this.ban(channel, "*!*@"+hostban);
-//					} else {
-//						this.ban(channel, "*!*@"+hostname);
-//					}
-					this.ban(channel, "*"+args[0]+"*!*@*");
-					String reason = "";
-					for(int i=1; i<args.length; i++) reason += args[i] + " ";
-					if(reason.isEmpty())
-						this.kick(channel, args[0]);
-					else
-						this.kick(channel, args[0], this.twistify(reason.trim()));
+					User destuser = this.getUserFromNick(channel, args[0]);
+					if(destuser!=null) {
+						this.ban(channel, "*!*@"+destuser.getHostname());
+						String reason = "";
+						for(int i=1; i<args.length; i++) reason += args[i] + " ";
+						if(reason.isEmpty())
+							this.kick(channel, destuser.getNick());
+						else
+							this.kick(channel, destuser.getNick(), this.twistify(reason.trim()));
+					}
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
 		
 		// !unban : Only OPs and above should be able to do this
 		if(cmd.matches("unban")) {
-			if(senderstatus.matches("[&@~]")) {
-				if(args!=null && args.length>=1) {
-					this.unBan(channel, "*"+args[0]+"*!*@*");
+			if(sourceuser.getPrefix().matches("[&@~]")) {
+				User destuser = this.getUserFromNick(channel, args[0]);
+				if(destuser!=null) {
+					if(args!=null && args.length>=1) {
+						this.unBan(channel, "*!*@"+destuser.getHostname());
+					}
 				}
 			} else {
-				this.kickNoOps(channel, sender);
+				this.kickNoOps(channel, sourceuser.getNick());
 			}
 			return;
 		}
@@ -237,96 +246,96 @@ public class TwistBot extends PircBot {
 			
 			// !aop : Only channel owners should be able to do this
 			if(cmd.matches("aop")) {
-				if(senderstatus.matches("[~]")) {
+				if(sourceuser.getPrefix().matches("[~]")) {
 					if(args!=null && args.length>=1) {
 						this.aop(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !deaop : Only channel owners should be able to do this
 			if(cmd.matches("deaop")) {
-				if(senderstatus.matches("[~]")) {
+				if(sourceuser.getPrefix().matches("[~]")) {
 					if(args!=null && args.length>=1) {
 						this.deAop(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !op : Only AOPs and above should be able to do this
 			if(cmd.matches("op")) {
-				if(senderstatus.matches("[@~]")) {
+				if(sourceuser.getPrefix().matches("[@~]")) {
 					if(args!=null && args.length>=1) {
 						this.op(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !deop : Only AOPs and above should be able to do this
 			if(cmd.matches("deop")) {
-				if(senderstatus.matches("[@~]")) {
+				if(sourceuser.getPrefix().matches("[@~]")) {
 					if(args!=null && args.length>=1) {
 						this.deOp(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !hop : Only OPs and above should be able to do this
 			if(cmd.matches("hop")) {
-				if(senderstatus.matches("[&@~]")) {
+				if(sourceuser.getPrefix().matches("[&@~]")) {
 					if(args!=null && args.length>=1) {
 						this.hop(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !dehop : Only OPs and above should be able to do this
 			if(cmd.matches("dehop")) {
-				if(senderstatus.matches("[&@~]")) {
+				if(sourceuser.getPrefix().matches("[&@~]")) {
 					if(args!=null && args.length>=1) {
 						this.deHop(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !voice : Only HOPs and above should be able to do this
 			if(cmd.matches("voice")) {
-				if(senderstatus.matches("[%&@~]")) {
+				if(sourceuser.getPrefix().matches("[%&@~]")) {
 					if(args!=null && args.length>=1) {
 						this.voice(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
 			
 			// !devoice : Only HOPs and above should be able to do this
 			if(cmd.matches("devoice")) {
-				if(senderstatus.matches("[%&@~]")) {
+				if(sourceuser.getPrefix().matches("[%&@~]")) {
 					if(args!=null && args.length>=1) {
 						this.deVoice(channel, args[0]);
 					}
 				} else {
-					this.kickNoOps(channel, sender);
+					this.kickNoOps(channel, sourceuser.getNick());
 				}
 				return;
 			}
