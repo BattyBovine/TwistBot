@@ -139,7 +139,11 @@ public abstract class PircBot implements ReplyConstants {
         this.removeAllChannels();
         
         // Connect to the server.
-        Socket socket =  new Socket(hostname, port);
+        Socket socket = null;
+        if(_ssl)	socket = new TrustingSSLSocketFactory().createSocket(hostname, port);
+        else		socket = new Socket(hostname, port);
+        if(socket==null)	return;
+        
         this.log("*** Connected to server.");
         
         _inetAddress = socket.getLocalAddress();
@@ -2403,6 +2407,17 @@ public abstract class PircBot implements ReplyConstants {
         _verbose = verbose;
     }
     
+
+    /**
+     * Tells the Bot to use an SSL connection to the server. This defaults to
+     * false.
+     *
+     * @param ssl Whether to use SSL for this connection.
+     */
+    public final void setSecure(boolean ssl) {
+        _ssl = ssl;
+    }
+    
     
     /**
      * Sets the name of the bot, which will be used as its nick when it
@@ -3137,6 +3152,7 @@ public abstract class PircBot implements ReplyConstants {
     private String _server = null;
     private int _port = -1;
     private String _password = null;
+    private boolean _ssl = false;
     
     // Outgoing message stuff.
     private Queue _outQueue = new Queue();
