@@ -18,8 +18,6 @@ public class TwistBotMain {
 		bot = new TwistBot();
 		if(bot == null)
 			System.exit(1);
-		String server = "", nspass = "";
-		List<String> channels = new ArrayList<String>();
 		
 		for(String arg : args) {
 			if(arg.startsWith("-")) {
@@ -69,8 +67,7 @@ public class TwistBotMain {
 		}
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		boolean loop = true;
-		while(loop) {
+		while(bot.isConnected()) {
 			String in = null;
 			try {
 				System.out.print(bot.getNick()+"> ");
@@ -82,11 +79,12 @@ public class TwistBotMain {
 			Matcher m = Pattern.compile("^[/!](.*)").matcher(in);
 			if(m.matches()) {
 				if(in.startsWith("/"))
-					loop = bot.handleServerCommand(m.group(1).trim());
+					bot.handleServerCommand(m.group(1).trim());
 //				else if(in.startsWith("!"))
 //					bot.handleClientCommand(channel, bot.getNick(), m.group(1).trim());
 //			} else {
-//				bot.sendMessage(channel, bot.twistify(in));
+//				for(String channel : channels)
+//					bot.sendMessage(channel, bot.twistify(in));
 			}
 		}
 		
@@ -96,5 +94,7 @@ public class TwistBotMain {
 	
 	
 	private static TwistBot bot = null;
+	private static String server = "", nspass = "";
+	private static List<String> channels = new ArrayList<String>();
 	
 }

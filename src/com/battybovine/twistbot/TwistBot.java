@@ -348,11 +348,15 @@ public class TwistBot extends PircBot {
 		}
 	}
 	
-	public boolean handleServerCommand(String cmdin) {
+	public void handleServerCommand(String cmdin) {
 		String[] cmdsplit = cmdin.split("\\s+", 2);
 		String cmd = cmdsplit[0].toLowerCase();
 		String[] args = null;
-		if(cmdsplit.length>1) { args = cmdsplit[1].split("\\s+"); };
+		String allargs = "";
+		if(cmdsplit.length>1) {
+			allargs = cmdsplit[1];
+			args = cmdsplit[1].split("\\s+");
+		}
 		
 		if(!cmd.isEmpty()) {
 			/*if(cmd.matches("connect")) {
@@ -373,7 +377,7 @@ public class TwistBot extends PircBot {
 					if(args[0].matches("identify") && args.length>=2)
 						this.identify(args[1]);
 					else
-						this.sendMessage("NickServ", args[0]);
+						this.sendMessage("NickServ", allargs);
 			} else if(cmd.matches("part")) {
 				if(args!=null && args.length>=1)
 					this.partChannel(args[0]);
@@ -382,12 +386,22 @@ public class TwistBot extends PircBot {
 					String quitmsg = "";
 					for(String arg : args) quitmsg += (arg+" ");
 					this.quitServer(this.twistify(quitmsg.trim()));
-				} else
+				} else {
 					this.quitServer(this.getNick());
-				return false;
+				}
+				// A simple pause to give us time to disconnect
+				// before returning from the function. I know there
+				// must be a better way to handle this situation,
+				// but I'm stupid.
+				while(this.isConnected())	continue;
+			} else if(cmd.matches("say")) {
+				if(args!=null && args.length>=2 && args[0].startsWith("#")) {
+					String msg = "";
+					for(int i=1;i<args.length;i++)	msg+=args[i]+" ";
+					this.sendMessage(args[0], msg.trim());
+				}
 			}
 		}
-		return true;
 	}
 	
 	
