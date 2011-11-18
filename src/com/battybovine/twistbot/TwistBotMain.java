@@ -30,7 +30,7 @@ public class TwistBotMain {
 					if(sp.length>1)	port = Integer.parseInt(sp[1]);
 					continue;
 				}
-				if(channels!=null && arg.startsWith("#")) {
+				if(channels!=null && arg.matches("^[#&+!](.*)")) {
 					channels.add(arg);
 					continue;
 				}
